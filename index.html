@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Цифровой навигатор Первых</title>
+<style>
+/* ===== СБРОС И БАЗОВЫЕ СТИЛИ ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --c1: #1a1a2e; --c2: #16213e; --c3: #0f3460;
+  --accent: #e94560; --yellow: #f5c518;
+  --bg: #0d1117; --card: #161b22; --card2: #21262d;
+  --text: #e6edf3; --text2: #8b949e; --border: #30363d;
+  --radius: 12px; --shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+  min-width: 320px; overflow-x: hidden;
+}
+a { color: var(--accent); text-decoration: none; }
+
+/* ===== НАВИГАЦИЯ ===== */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: linear-gradient(135deg, var(--c1), var(--c2));
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+  padding: 0 20px; height: 64px; display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo {
+  font-size: 1.2rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--yellow));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; white-space: nowrap; cursor: pointer;
+}
+.nav-links { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; overflow-x: auto; }
+.nav-links button {
+  background: none; border: none; color: var(--text2); font-size: .85rem;
+  padding: 8px 12px; cursor: pointer; border-radius: 8px; transition: all .3s;
+  white-space: nowrap; font-family: inherit;
+}
+.nav-links button:hover, .nav-links button.active {
+  color: var(--text); background: rgba(233,69,96,.15);
+}
+.nav-links button.active { color: var(--accent); }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.btn-login {
+  background: linear-gradient(135deg, var(--accent), #c73e54);
+  border: none; color: #fff; padding: 8px 16px; border-radius: 8px;
+  cursor: pointer; font-size: .85rem; font-family: inherit; transition: transform .2s;
+}
+.btn-login:hover { transform: scale(1.05); }
+.admin-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(245,197,24,.1); padding: 6px 12px; border-radius: 8px;
+  font-size: .85rem; color: var(--yellow);
+}
+.btn-logout {
+  background: var(--card2); border: 1px solid var(--border); color: var(--text2);
+  padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: .8rem;
+  font-family: inherit; transition: all .2s;
+}
+.btn-logout:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Мобильное меню */
+.burger {
+  display: none; background: none; border: none; color: var(--text);
+  font-size: 1.5rem; cursor: pointer; padding: 4px;
+}
+@media(max-width:768px) {
+  .burger { display: block; }
+  .nav-links {
+    position: fixed; top: 64px; left: 0; right: 0;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    flex-direction: column; padding: 12px; gap: 4px;
+    transform: translateY(-120%); transition: transform .3s; border-bottom: 1px solid var(--border);
+  }
+  .nav-links.open { transform: translateY(0); }
+  .nav-links button { width: 100%; text-align: left; padding: 12px 16px; }
+}
+
+/* ===== СЕКЦИИ ===== */
+.section {
+  display: none; min-height: calc(100vh - 64px); padding: 84px 20px 40px;
+  max-width: 1200px; margin: 0 auto;
+  animation: fadeUp .5s ease;
+}
+.section.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.section-title {
+  font-size: 2rem; font-weight: 800; margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--yellow));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.section-sub { color: var(--text2); margin-bottom: 32px; font-size: 1.05rem; }
+
+/* ===== ГЛАВНАЯ ===== */
+.hero {
+  text-align: center; padding: 60px 0 40px;
+  background: linear-gradient(135deg, rgba(233,69,96,.08), rgba(245,197,24,.05));
+  border-radius: 24px; margin-bottom: 40px; border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle at 30% 40%, rgba(233,69,96,.06) 0%, transparent 50%),
+              radial-gradient(circle at 70% 60%, rgba(245,197,24,.04) 0%, transparent 50%);
+  animation: heroGlow 8s ease-in-out infinite alternate;
+}
+@keyframes heroGlow {
+  from { transform: rotate(0deg); } to { transform: rotate(5deg); }
+}
+.hero-content { position: relative; z-index: 1; padding: 0 20px; }
+.hero h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 16px; line-height: 1.2; }
+.hero h1 span {
+  background: linear-gradient(135deg, var(--accent), var(--yellow));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero p { color: var(--text2); font-size: 1.1rem; max-width: 600px; margin: 0 auto 24px; }
+.hashtags {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+.hashtag {
+  background: linear-gradient(135deg, rgba(233,69,96,.15), rgba(245,197,24,.1));
+  padding: 6px 16px; border-radius: 20px; font-size: .9rem; font-weight: 600;
+  color: var(--yellow); border: 1px solid rgba(245,197,24,.2);
+}
+
+/* Аккордеон */
+.faq-list { max-width: 800px; margin: 0 auto; }
+.faq-item {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  margin-bottom: 8px; overflow: hidden; transition: all .3s;
+}
+.faq-item:hover { border-color: rgba(233,69,96,.3); }
+.faq-q {
+  width: 100%; background: none; border: none; color: var(--text);
+  padding: 16px 20px; font-size: .95rem; text-align: left; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: inherit; font-weight: 600;
+}
+.faq-q::after {
+  content: '+'; font-size: 1.3rem; color: var(--accent); transition: transform .3s;
+  flex-shrink: 0; margin-left: 12px;
+}
+.faq-item.open .faq-q::after { transform: rotate(45deg); }
+.faq-a {
+  max-height: 0; overflow: hidden; transition: max-height .4s ease, padding .3s;
+  color: var(--text2); font-size: .9rem; line-height: 1.7; padding: 0 20px;
+}
+.faq-item.open .faq-a { max-height: 300px; padding: 0 20px 16px; }
+
+/* ===== КАРТА СТРУКТУРЫ ===== */
+.org-chart { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 20px 0; }
+.org-level { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; position: relative; }
+.org-connector {
+  width: 2px; height: 40px; background: linear-gradient(to bottom, var(--accent), var(--c3));
+  margin: 0 auto; position: relative;
+}
+.org-connector.branch {
+  width: 80%; height: 2px; margin: 0 auto;
+  background: linear-gradient(to right, transparent, var(--accent), var(--accent), transparent);
+}
+.org-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 24px; text-align: center; cursor: pointer; transition: all .3s;
+  min-width: 140px; position: relative;
+}
+.org-card:hover {
+  transform: translateY(-4px); border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(233,69,96,.2);
+}
+.org-card .icon { font-size: 2rem; margin-bottom: 8px; }
+.org-card .title { font-weight: 700; font-size: .95rem; }
+.org-card .role { color: var(--text2); font-size: .8rem; margin-top: 4px; }
+.org-card.chairman { border-color: var(--yellow); background: linear-gradient(135deg, var(--card), rgba(245,197,24,.08)); }
+.org-card.deputy { border-color: var(--accent); }
+.org-card.direction { border-color: var(--border); }
+.org-card.direction:nth-child(1) { --dir-color: #58a6ff; }
+.org-card.direction:nth-child(2) { --dir-color: #e94560; }
+.org-card.direction:nth-child(3) { --dir-color: #3fb950; }
+.org-card.direction:nth-child(4) { --dir-color: #f5c518; }
+.org-card.direction:nth-child(5) { --dir-color: #bc8cff; }
+.org-card.direction:nth-child(6) { --dir-color: #39d353; }
+.org-card.direction:hover { border-color: var(--dir-color, var(--accent)); }
+
+/* ===== МОДАЛЬНЫЕ ОКНА ===== */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000;
+  background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+  animation: modalFadeIn .3s;
+}
+.modal-overlay.show { display: flex; }
+@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 32px; max-width: 500px; width: 100%; position: relative;
+  animation: modalSlide .3s ease; max-height: 90vh; overflow-y: auto;
+}
+@keyframes modalSlide { from { transform: translateY(20px) scale(.95); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-close {
+  position: absolute; top: 12px; right: 16px; background: none; border: none;
+  color: var(--text2); font-size: 1.5rem; cursor: pointer; transition: color .2s;
+}
+.modal-close:hover { color: var(--accent); }
+.modal h3 { font-size: 1.3rem; margin-bottom: 12px; }
+.modal p { color: var(--text2); font-size: .9rem; line-height: 1.7; }
+.modal .detail { margin-top: 12px; padding: 12px; background: var(--card2); border-radius: 8px; }
+.modal .detail span { display: block; font-size: .85rem; margin-bottom: 4px; }
+.modal .detail span strong { color: var(--accent); }
+
+/* Shake анимация */
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-8px); }
+  40%,80% { transform: translateX(8px); }
+}
+.shake { animation: shake .4s ease; }
+
+/* ===== ДОКУМЕНТЫ ===== */
+.docs-toolbar {
+  display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center;
+}
+.search-input {
+  flex: 1; min-width: 200px; padding: 10px 16px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-size: .9rem; font-family: inherit; transition: border-color .3s;
+}
+.search-input:focus { outline: none; border-color: var(--accent); }
+.tab-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.tab-btn {
+  padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--card); color: var(--text2); cursor: pointer; font-size: .8rem;
+  font-family: inherit; transition: all .3s; white-space: nowrap;
+}
+.tab-btn:hover, .tab-btn.active {
+  border-color: var(--accent); color: var(--accent); background: rgba(233,69,96,.08);
+}
+.docs-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;
+}
+.doc-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; transition: all .3s; display: flex; flex-direction: column;
+}
+.doc-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow); }
+.doc-card .doc-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.doc-card h4 { font-size: 1rem; margin-bottom: 6px; }
+.doc-card p { color: var(--text2); font-size: .85rem; flex: 1; margin-bottom: 12px; }
+.doc-card .doc-cat {
+  display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: .7rem;
+  background: rgba(233,69,96,.1); color: var(--accent); margin-bottom: 12px; align-self: flex-start;
+}
+.btn-download {
+  padding: 8px 16px; background: linear-gradient(135deg, var(--c3), var(--c2));
+  border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+  cursor: pointer; font-size: .85rem; font-family: inherit; transition: all .3s;
+  align-self: flex-start;
+}
+.btn-download:hover { border-color: var(--accent); background: rgba(233,69,96,.15); }
+
+/* ===== КОММУНИКАЦИЯ ===== */
+.comm-layout { display: grid; grid-template-columns: 1fr; gap: 32px; }
+@media(min-width:900px) { .comm-layout { grid-template-columns: 400px 1fr; } }
+.comm-form {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; align-self: flex-start; position: sticky; top: 84px;
+}
+.comm-form h3 { margin-bottom: 16px; font-size: 1.1rem; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: .85rem; color: var(--text2); margin-bottom: 4px; }
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: .9rem; font-family: inherit;
+  transition: border-color .3s; resize: vertical;
+}
+.form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+.btn-submit {
+  width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), #c73e54);
+  border: none; border-radius: 8px; color: #fff; font-size: 1rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: transform .2s, box-shadow .2s;
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(233,69,96,.4); }
+.tickets-list h3 { margin-bottom: 16px; font-size: 1.1rem; }
+.ticket-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 20px; margin-bottom: 12px; transition: all .3s;
+}
+.ticket-card:hover { border-color: rgba(233,69,96,.3); }
+.ticket-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.ticket-header h4 { font-size: .95rem; }
+.status-badge {
+  padding: 3px 10px; border-radius: 12px; font-size: .75rem; font-weight: 600;
+}
+.status-new { background: rgba(245,197,24,.15); color: var(--yellow); }
+.status-progress { background: rgba(88,166,255,.15); color: #58a6ff; }
+.status-resolved { background: rgba(63,185,80,.15); color: #3fb950; }
+.status-rejected { background: rgba(233,69,96,.15); color: var(--accent); }
+.ticket-meta { font-size: .8rem; color: var(--text2); margin-bottom: 8px; }
+.ticket-body { font-size: .9rem; color: var(--text2); line-height: 1.6; }
+.ticket-actions { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+.ticket-actions button {
+  padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--card2); color: var(--text2); font-size: .75rem;
+  cursor: pointer; font-family: inherit; transition: all .2s;
+}
+.ticket-actions button:hover { border-color: var(--accent); color: var(--text); }
+.admin-comment-box { margin-top: 10px; display: flex; gap: 8px; }
+.admin-comment-box input {
+  flex: 1; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-size: .85rem; font-family: inherit;
+}
+.admin-comment-box input:focus { outline: none; border-color: var(--accent); }
+.admin-comment-box button {
+  padding: 8px 14px; background: var(--c3); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); cursor: pointer; font-size: .8rem; font-family: inherit;
+}
+.ticket-comment {
+  margin-top: 8px; padding: 8px 12px; background: rgba(245,197,24,.05);
+  border-left: 3px solid var(--yellow); border-radius: 0 8px 8px 0;
+  font-size: .83rem; color: var(--text2);
+}
+.ticket-comment strong { color: var(--yellow); }
+
+/* ===== АНАЛИТИКА ===== */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px; margin-bottom: 32px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; text-align: center; transition: all .3s;
+}
+.stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.stat-card .stat-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.stat-card .stat-number {
+  font-size: 2.5rem; font-weight: 900;
+  background: linear-gradient(135deg, var(--accent), var(--yellow));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.stat-card .stat-label { color: var(--text2); font-size: .9rem; margin-top: 4px; }
+.chart-section {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; margin-bottom: 24px;
+}
+.chart-section h3 { margin-bottom: 20px; font-size: 1.1rem; }
+.bar-chart { display: flex; flex-direction: column; gap: 12px; }
+.bar-row { display: flex; align-items: center; gap: 12px; }
+.bar-label { width: 120px; font-size: .85rem; color: var(--text2); flex-shrink: 0; text-align: right; }
+.bar-track { flex: 1; height: 28px; background: var(--card2); border-radius: 6px; overflow: hidden; position: relative; }
+.bar-fill {
+  height: 100%; border-radius: 6px; transition: width 1.5s ease;
+  display: flex; align-items: center; padding-left: 10px; font-size: .8rem; font-weight: 600;
+  min-width: 40px;
+}
+.bar-fill.c1 { background: linear-gradient(90deg, #58a6ff, #388bfd); }
+.bar-fill.c2 { background: linear-gradient(90deg, #e94560, #c73e54); }
+.bar-fill.c3 { background: linear-gradient(90deg, #3fb950, #2ea043); }
+.bar-fill.c4 { background: linear-gradient(90deg, #f5c518, #d4a80e); }
+.bar-fill.c5 { background: linear-gradient(90deg, #bc8cff, #a371f7); }
+.bar-fill.c6 { background: linear-gradient(90deg, #39d353, #26a641); }
+.bar-percent { margin-left: auto; padding-right: 10px; }
+
+.admin-panel {
+  background: linear-gradient(135deg, rgba(245,197,24,.05), rgba(233,69,96,.05));
+  border: 1px solid rgba(245,197,24,.2); border-radius: var(--radius);
+  padding: 24px; margin-top: 24px;
+}
+.admin-panel h3 { color: var(--yellow); margin-bottom: 16px; }
+
+/* Анимация счётчика — canvas */
+.canvas-chart { width: 100%; max-width: 500px; margin: 0 auto; display: block; }
+
+/* ===== FOOTER ===== */
+.footer {
+  text-align: center; padding: 40px 20px; margin-top: 40px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--c1), var(--c2));
+}
+.footer .hashtags { margin-bottom: 16px; }
+.footer p { color: var(--text2); font-size: .85rem; }
+
+/* ===== УВЕДОМЛЕНИЕ ===== */
+.toast {
+  position: fixed; bottom: 20px; right: 20px; z-index: 3000;
+  background: var(--card); border: 1px solid var(--accent); border-radius: 12px;
+  padding: 16px 24px; color: var(--text); font-size: .9rem;
+  transform: translateY(100px); opacity: 0; transition: all .4s;
+  box-shadow: 0 8px 32px rgba(233,69,96,.3);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ===== ЛОГИН МОДАЛКА ===== */
+.login-modal .modal { max-width: 380px; }
+.login-modal .form-group { margin-bottom: 14px; }
+.login-error {
+  color: var(--accent); font-size: .85rem; margin-top: 8px;
+  display: none; text-align: center;
+}
+.login-error.show { display: block; }
+
+/* ===== АДАПТИВ ===== */
+@media(max-width:600px) {
+  .hero h1 { font-size: 1.6rem; }
+  .section { padding: 74px 12px 30px; }
+  .section-title { font-size: 1.5rem; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .bar-label { width: 80px; font-size: .75rem; }
+  .org-card { min-width: 110px; padding: 12px 16px; }
+  .comm-form { position: static; }
+}
+@media(max-width:400px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+/* Прогресс-бар статусов */
+.status-bars { margin-top: 12px; }
+.status-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.status-bar-label { width: 100px; font-size: .8rem; }
+.status-bar-track { flex: 1; height: 20px; background: var(--card2); border-radius: 4px; overflow: hidden; }
+.status-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ===== НАВИГАЦИЯ ===== -->
+<nav class="navbar">
+  <div class="nav-logo" onclick="showSection('home')">🚀 Навигатор Первых</div>
+  <button class="burger" onclick="toggleMenu()" aria-label="Меню">☰</button>
+  <div class="nav-links" id="navLinks">
+    <button class="active" onclick="showSection('home')">Главная</button>
+    <button onclick="showSection('structure')">Структура</button>
+    <button onclick="showSection('docs')">Документы</button>
+    <button onclick="showSection('comm')">Коммуникация</button>
+    <button onclick="showSection('analytics')">Аналитика</button>
+  </div>
+  <div class="nav-right" id="navRight">
+    <button class="btn-login" onclick="openLogin()">🔐 Вход</button>
+  </div>
+</nav>
+
+<!-- ===== 1. ГЛАВНАЯ / FAQ ===== -->
+<section class="section active" id="sec-home">
+  <div class="hero">
+    <div class="hero-content">
+      <h1>Цифровой навигатор<br><span>Движения Первых</span></h1>
+      <p>Твой путеводитель по первичной организации. Здесь ты найдёшь ответы на вопросы, узнаешь о структуре, проектах и возможностях!</p>
+      <div class="hashtags">
+        <span class="hashtag">#ДвижениеПервых</span>
+        <span class="hashtag">#ПервичкаВДеле</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Часто задаваемые вопросы</h2>
+  <p class="section-sub">Ответы на самые популярные вопросы участников</p>
+
+  <div class="faq-list" id="faqList"></div>
+</section>
+
+<!-- ===== 2. СТРУКТУРА ===== -->
+<section class="section" id="sec-structure">
+  <h2 class="section-title">Структура первичной организации</h2>
+  <p class="section-sub">Нажмите на любой блок, чтобы узнать подробности</p>
+
+  <div class="org-chart" id="orgChart">
+    <!-- Председатель -->
+    <div class="org-level">
+      <div class="org-card chairman" onclick="openOrgModal(0)">
+        <div class="icon">👑</div>
+        <div class="title">Председатель ПО</div>
+        <div class="role">Руководитель</div>
+      </div>
+    </div>
+    <div class="org-connector"></div>
+    <!-- Заместитель -->
+    <div class="org-level">
+      <div class="org-card deputy" onclick="openOrgModal(1)">
+        <div class="icon">⭐</div>
+        <div class="title">Заместитель</div>
+        <div class="role">Координатор</div>
+      </div>
+    </div>
+    <div class="org-connector"></div>
+    <div class="org-connector branch"></div>
+    <!-- Направления -->
+    <div class="org-level">
+      <div class="org-card direction" onclick="openOrgModal(2)">
+        <div class="icon">📚</div>
+        <div class="title">Образование</div>
+        <div class="role">Направление</div>
+      </div>
+      <div class="org-card direction" onclick="openOrgModal(3)">
+        <div class="icon">🤝</div>
+        <div class="title">Волонтёрство</div>
+        <div class="role">Направление</div>
+      </div>
+      <div class="org-card direction" onclick="openOrgModal(4)">
+        <div class="icon">⚽</div>
+        <div class="title">Спорт</div>
+        <div class="role">Направление</div>
+      </div>
+      <div class="org-card direction" onclick="openOrgModal(5)">
+        <div class="icon">🎬</div>
+        <div class="title">Медиа</div>
+        <div class="role">Направление</div>
+      </div>
+      <div class="org-card direction" onclick="openOrgModal(6)">
+        <div class="icon">🎖️</div>
+        <div class="title">Патриотизм</div>
+        <div class="role">Направление</div>
+      </div>
+      <div class="org-card direction" onclick="openOrgModal(7)">
+        <div class="icon">🌱</div>
+        <div class="title">Связи</div>
+        <div class="role">Направление</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3. ДОКУМЕНТЫ ===== -->
+<section class="section" id="sec-docs">
+  <h2 class="section-title">Документы</h2>
+  <p class="section-sub">База документов первичной организации</p>
+
+  <div class="docs-toolbar">
+    <input type="text" class="search-input" placeholder="🔍 Поиск документа..." id="docSearch" oninput="filterDocs()">
+    <div class="tab-btns" id="docTabs">
+      <button class="tab-btn active" onclick="setDocCat('all', this)">Все</button>
+      <button class="tab-btn" onclick="setDocCat('charter', this)">Уставные</button>
+      <button class="tab-btn" onclick="setDocCat('instructions', this)">Инструкции</button>
+      <button class="tab-btn" onclick="setDocCat('templates', this)">Шаблоны</button>
+      <button class="tab-btn" onclick="setDocCat('reports', this)">Отчёты</button>
+    </div>
+  </div>
+
+  <div class="docs-grid" id="docsGrid"></div>
+</section>
+
+<!-- ===== 4. КОММУНИКАЦИЯ ===== -->
+<section class="section" id="sec-comm">
+  <h2 class="section-title">Центр коммуникации</h2>
+  <p class="section-sub">Отправьте вопрос или обращение — мы обязательно ответим</p>
+
+  <div class="comm-layout">
+    <div class="comm-form">
+      <h3>📩 Новое обращение</h3>
+      <div class="form-group">
+        <label>Имя *</label>
+        <input type="text" id="commName" placeholder="Ваше имя">
+      </div>
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" id="commEmail" placeholder="email@example.com">
+      </div>
+      <div class="form-group">
+        <label>Тема *</label>
+        <input type="text" id="commSubject" placeholder="Тема обращения">
+      </div>
+      <div class="form-group">
+        <label>Сообщение *</label>
+        <textarea id="commMessage" rows="4" placeholder="Опишите ваш вопрос..."></textarea>
+      </div>
+      <button class="btn-submit" onclick="submitTicket()">Отправить</button>
+    </div>
+    <div class="tickets-list">
+      <h3>📋 Мои обращения</h3>
+      <div id="ticketsList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 5. АНАЛИТИКА ===== -->
+<section class="section" id="sec-analytics">
+  <h2 class="section-title">Аналитика</h2>
+  <p class="section-sub">Показатели деятельности первичной организации</p>
+
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="chart-section">
+    <h3>📊 Обращения по статусам</h3>
+    <div id="statusChart"></div>
+  </div>
+
+  <div class="chart-section">
+    <h3>📈 Активность по направлениям</h3>
+    <div class="bar-chart" id="directionsChart"></div>
+  </div>
+
+  <div class="chart-section">
+    <h3>🎯 Вовлечённость участников</h3>
+    <canvas id="canvasChart" class="canvas-chart" width="500" height="260"></canvas>
+  </div>
+
+  <div class="admin-panel" id="adminAnalytics" style="display:none;">
+    <h3>🔒 Расширенная статистика (Админ)</h3>
+    <div id="adminStatsContent"></div>
+  </div>
+</section>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО СТРУКТУРЫ ===== -->
+<div class="modal-overlay" id="orgModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('orgModal')">&times;</button>
+    <h3 id="orgModalTitle"></h3>
+    <p id="orgModalDesc"></p>
+    <div class="detail" id="orgModalDetail"></div>
+  </div>
+</div>
+
+<!-- ===== МОДАЛЬНОЕ ОКНО ЛОГИНА ===== -->
+<div class="modal-overlay login-modal" id="loginModal">
+  <div class="modal" id="loginBox">
+    <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+    <h3>🔐 Вход для администратора</h3>
+    <div class="form-group">
+      <label>Логин</label>
+      <input type="text" id="loginUser" placeholder="Введите логин">
+    </div>
+    <div class="form-group">
+      <label>Пароль</label>
+      <input type="password" id="loginPass" placeholder="Введите пароль">
+    </div>
+    <button class="btn-submit" onclick="doLogin()" style="margin-top:8px;">Войти</button>
+    <div class="login-error" id="loginError">Неверный логин или пароль!</div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="hashtags">
+    <span class="hashtag">#ДвижениеПервых</span>
+    <span class="hashtag">#ПервичкаВДеле</span>
+  </div>
+  <p>&copy; 2026 Цифровой навигатор Первых. Все права защищены.</p>
+</footer>
+
+<script>
+/* ========================================================
+   ДАННЫЕ И КОНФИГУРАЦИЯ
+   ======================================================== */
+
+// FAQ данные
+const faqData = [
+  { q: 'Как вступить в Движение Первых?', a: 'Для вступления необходимо зарегистрироваться на официальном сайте будьвдвижении.рф, заполнить анкету и обратиться в ближайшую первичную организацию. Приём осуществляется с 6 лет (с согласия родителей) и до 25 лет.' },
+  { q: 'Кто может стать участником?', a: 'Участником может стать любой гражданин Российской Федерации в возрасте от 6 до 25 лет, разделяющий ценности Движения. Для несовершеннолетних требуется согласие законных представителей.' },
+  { q: 'Какие направления деятельности существуют?', a: 'В Движении Первых 12 основных направлений: «Образование и знания», «Наука и технологии», «Труд, профессия и своё дело», «Культура и искусство», «Волонтёрство и добровольчество», «Патриотизм и историческая память», «Спорт», «Здоровый образ жизни», «Медиа и коммуникации», «Дипломатия и международные отношения», «Экология и охрана природы», «Туризм и путешествия».' },
+  { q: 'Как создать первичную организацию?', a: 'Для создания первичной организации необходимо собрать инициативную группу (не менее 3 человек), выбрать председателя, подать заявку через региональное отделение и пройти регистрацию. Подробная инструкция доступна в разделе "Документы".' },
+  { q: 'Как участвовать в проектах и конкурсах?', a: 'Информация о проектах публикуется на сайте и в социальных сетях Движения. Регистрация на конкурсы происходит через личный кабинет на платформе будьвдвижении.рф. Также можно узнать о мероприятиях у председателя первичной организации.' },
+  { q: 'Где найти наставника?', a: 'Наставники закрепляются за каждой первичной организацией. Обратитесь к председателю ПО или в региональное отделение. Также можно подать заявку на наставничество через платформу Движения.' },
+  { q: 'Как получить волонтёрскую книжку?', a: 'Волонтёрская книжка оформляется через платформу dobro.ru. Необходимо зарегистрироваться, указать свои данные и начать фиксировать волонтёрские часы. Книжка выдаётся после накопления определённого количества часов.' },
+  { q: 'Какие мероприятия проходят регулярно?', a: 'Регулярно проводятся: еженедельные собрания ПО, ежемесячные акции и флешмобы, квартальные форумы и конференции, ежегодные слёты и фестивали. Календарь мероприятий доступен на сайте и в приложении.' },
+  { q: 'Как стать лидером направления?', a: 'Для этого необходимо активно участвовать в деятельности направления, проявить инициативу, предложить и реализовать собственный проект. Кандидатура лидера утверждается на общем собрании первичной организации.' },
+  { q: 'Куда обращаться при возникновении проблем?', a: 'При возникновении вопросов обращайтесь: к председателю первичной организации, в региональное отделение, на горячую линию Движения, или воспользуйтесь формой обратной связи в разделе "Центр коммуникации" нашего навигатора.' }
+];
+
+// Данные структуры организации
+const orgData = [
+  { title: 'Председатель ПО', desc: 'Руководитель первичной организации. Отвечает за общее управление, стратегическое планирование и представительство организации.', name: 'Бакуркин Матвей', contact: '@Calisto_MBL' },
+  { title: 'Заместитель председателя', desc: 'Координирует работу направлений, замещает председателя, ведёт документооборот и контролирует выполнение плана работы.', name: 'Полунина Злата', contact: '@zlatka_056', },
+  { title: 'Направление «Образование»', desc: 'Организация образовательных мероприятий, мастер-классов, лекций, олимпиад и интеллектуальных игр для участников.', name: 'Актелинова Дарья', contact: '@dasha4440', },
+  { title: 'Направление «Труд»', desc: 'Координация волонтёрских акций, помощь ветеранам, экологические субботники, социальные проекты и благотворительность.', name: 'Мишиева Асем', contact: '@asqkii', },
+  { title: 'Направление «Спорт»', desc: 'Проведение спортивных соревнований, турниров, организация секций и пропаганда здорового образа жизни.', name: 'Елизарова Екатерина', contact: '@Katch_1', },
+  { title: 'Направление «Медиа»', desc: 'Ведение социальных сетей, создание контента, фото/видеосъёмка мероприятий, выпуск новостей и пресс-релизов.', name: 'Шилова Александра', contact: 'saneshkin',  },
+  { title: 'Направление «Культура»', desc: 'Организация патриотических акций, уход за мемориалами, встречи с ветеранами, уроки мужества и исторические квесты.', name: 'Милана Гусейновна', contact: '@foipsadjf',  },
+  { title: 'Направление «Связи»', desc: 'Организация школьных онлайн‑трансляций мероприятий, внедрение электронного документооборота в совете, обучение одноклассников работе с цифровыми сервисами, викторины по цифровой грамотности.', name: 'Столповский Александр', contact: '@dsfdfksdo',  }
+];
+
+// Данные документов
+const docsData = [
+  { name: 'Устав Движения Первых', cat: 'charter', desc: 'Основной учредительный документ организации, определяющий цели, задачи и принципы деятельности.', icon: '📜' },
+  { name: 'Положение о первичной организации', cat: 'charter', desc: 'Документ, регламентирующий создание и деятельность первичных организаций.', icon: '📋' },
+  { name: 'Кодекс этики участника', cat: 'charter', desc: 'Правила поведения и этические нормы для всех участников Движения.', icon: '📕' },
+  { name: 'Инструкция по регистрации ПО', cat: 'instructions', desc: 'Пошаговое руководство по регистрации первичной организации.', icon: '📝' },
+  { name: 'Гайд по проведению мероприятий', cat: 'instructions', desc: 'Инструкция по планированию, организации и проведению мероприятий.', icon: '📖' },
+  { name: 'Памятка для наставника', cat: 'instructions', desc: 'Рекомендации и инструкции для наставников первичных организаций.', icon: '📘' },
+  { name: 'Руководство по работе с медиа', cat: 'instructions', desc: 'Инструкция по ведению социальных сетей и созданию контента.', icon: '📗' },
+  { name: 'Шаблон плана работы ПО', cat: 'templates', desc: 'Готовый шаблон для составления квартального плана работы организации.', icon: '📄' },
+  { name: 'Шаблон протокола собрания', cat: 'templates', desc: 'Унифицированная форма протокола общего собрания участников.', icon: '📄' },
+  { name: 'Шаблон отчёта о мероприятии', cat: 'templates', desc: 'Форма для составления отчёта по проведённому мероприятию.', icon: '📄' },
+  { name: 'Шаблон заявки на проект', cat: 'templates', desc: 'Бланк заявки для подачи проектной инициативы.', icon: '📄' },
+  { name: 'Годовой отчёт ПО 2023', cat: 'reports', desc: 'Итоговый отчёт о деятельности первичной организации за 2026 год.', icon: '📊' },
+  { name: 'Отчёт по волонтёрской деятельности', cat: 'reports', desc: 'Сводный отчёт о волонтёрских акциях и количестве участников.', icon: '📈' },
+  { name: 'Статистика участия в проектах', cat: 'reports', desc: 'Аналитический отчёт об участии членов ПО в проектах и конкурсах.', icon: '📉' }
+];
+
+// Категории документов
+const catNames = { charter: 'Уставные', instructions: 'Инструкции', templates: 'Шаблоны', reports: 'Отчёты' };
+
+// Текущие фильтры документов
+let currentDocCat = 'all';
+
+/* ========================================================
+   НАВИГАЦИЯ И СЕКЦИИ
+   ======================================================== */
+
+// Переключение секций
+function showSection(id) {
+  const map = { home: 'sec-home', structure: 'sec-structure', docs: 'sec-docs', comm: 'sec-comm', analytics: 'sec-analytics' };
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(map[id]).classList.add('active');
+
+  // Обновить активную кнопку в навигации
+  document.querySelectorAll('.nav-links button').forEach((b, i) => {
+    b.classList.toggle('active', ['home','structure','docs','comm','analytics'][i] === id);
+  });
+
+  // Закрыть мобильное меню
+  document.getElementById('navLinks').classList.remove('open');
+
+  // Обновить данные при переходе
+  if (id === 'comm') renderTickets();
+  if (id === 'analytics') renderAnalytics();
+
+  // Прокрутка наверх
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Мобильное меню
+function toggleMenu() {
+  document.getElementById('navLinks').classList.toggle('open');
+}
+
+/* ========================================================
+   FAQ АККОРДЕОН
+   ======================================================== */
+function renderFAQ() {
+  const list = document.getElementById('faqList');
+  list.innerHTML = faqData.map((item, i) => `
+    <div class="faq-item" onclick="toggleFAQ(this)">
+      <button class="faq-q">${item.q}</button>
+      <div class="faq-a">${item.a}</div>
+    </div>
+  `).join('');
+}
+
+function toggleFAQ(el) {
+  const wasOpen = el.classList.contains('open');
+  // Закрыть все
+  document.querySelectorAll('.faq-item').forEach(f => f.classList.remove('open'));
+  if (!wasOpen) el.classList.add('open');
+}
+
+/* ========================================================
+   МОДАЛЬНЫЕ ОКНА СТРУКТУРЫ
+   ======================================================== */
+function openOrgModal(index) {
+  const data = orgData[index];
+  document.getElementById('orgModalTitle').textContent = data.title;
+  document.getElementById('orgModalDesc').textContent = data.desc;
+  document.getElementById('orgModalDetail').innerHTML = `
+    <span><strong>ФИО:</strong> ${data.name}</span>
+    <span><strong>Email:</strong> ${data.contact}</span>
+  `;
+  document.getElementById('orgModal').classList.add('show');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// Закрытие модалки по клику на оверлей
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('show');
+  }
+});
+
+/* ========================================================
+   ДОКУМЕНТЫ
+   ======================================================== */
+function renderDocs() {
+  const search = document.getElementById('docSearch').value.toLowerCase();
+  const grid = document.getElementById('docsGrid');
+  const filtered = docsData.filter(d => {
+    const matchCat = currentDocCat === 'all' || d.cat === currentDocCat;
+    const matchSearch = d.name.toLowerCase().includes(search) || d.desc.toLowerCase().includes(search);
+    return matchCat && matchSearch;
+  });
+
+  grid.innerHTML = filtered.length ? filtered.map(d => `
+    <div class="doc-card">
+      <div class="doc-icon">${d.icon}</div>
+      <span class="doc-cat">${catNames[d.cat]}</span>
+      <h4>${d.name}</h4>
+      <p>${d.desc}</p>
+      <button class="btn-download" onclick="alert('Скачивание документа: ${d.name.replace(/'/g, "\\'")}')">📥 Скачать</button>
+    </div>
+  `).join('') : '<p style="color:var(--text2);grid-column:1/-1;text-align:center;padding:40px;">Документы не найдены</p>';
+}
+
+function setDocCat(cat, btn) {
+  currentDocCat = cat;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDocs();
+}
+
+function filterDocs() { renderDocs(); }
+
+/* ========================================================
+   КОММУНИКАЦИЯ — ОБРАЩЕНИЯ
+   ======================================================== */
+
+// Получить все обращения из localStorage
+function getTickets() {
+  try {
+    return JSON.parse(localStorage.getItem('nav_tickets') || '[]');
+  } catch { return []; }
+}
+
+// Сохранить обращения
+function saveTickets(tickets) {
+  localStorage.setItem('nav_tickets', JSON.stringify(tickets));
+}
+
+// Отправить новое обращение
+function submitTicket() {
+  const name = document.getElementById('commName').value.trim();
+  const email = document.getElementById('commEmail').value.trim();
+  const subject = document.getElementById('commSubject').value.trim();
+  const message = document.getElementById('commMessage').value.trim();
+
+  if (!name || !email || !subject || !message) {
+    showToast('Пожалуйста, заполните все поля!');
+    return;
+  }
+
+  // Простая валидация email
+  if (!email.includes('@') || !email.includes('.')) {
+    showToast('Введите корректный email!');
+    return;
+  }
+
+  const ticket = {
+    id: Date.now(),
+    name, email, subject, message,
+    status: 'new', // new, progress, resolved, rejected
+    date: new Date().toLocaleString('ru-RU'),
+    comment: ''
+  };
+
+  const tickets = getTickets();
+  tickets.unshift(ticket);
+  saveTickets(tickets);
+
+  // Сохранить имя и email пользователя
+  localStorage.setItem('nav_user_name', name);
+  localStorage.setItem('nav_user_email', email);
+
+  // Очистить форму
+  document.getElementById('commName').value = '';
+  document.getElementById('commEmail').value = '';
+  document.getElementById('commSubject').value = '';
+  document.getElementById('commMessage').value = '';
+
+  showToast('Обращение успешно отправлено! ✅');
+  renderTickets();
+}
+
+// Отрисовка обращений
+function renderTickets() {
+  const tickets = getTickets();
+  const isAdmin = sessionStorage.getItem('nav_admin') === 'true';
+  const userName = localStorage.getItem('nav_user_name') || '';
+  const userEmail = localStorage.getItem('nav_user_email') || '';
+  const container = document.getElementById('ticketsList');
+
+  // Обновить заголовок
+  const header = container.parentElement.querySelector('h3');
+  header.textContent = isAdmin ? '📋 Все обращения (Админ)' : '📋 Мои обращения';
+
+  // Фильтрация: админ видит всё, пользователь — только свои
+  const visible = isAdmin ? tickets : tickets.filter(t =>
+    (t.name === userName && t.email === userEmail) || (!userName && !userEmail)
+  );
+
+  if (!visible.length) {
+    container.innerHTML = '<p style="color:var(--text2);padding:20px;text-align:center;">Обращений пока нет</p>';
+    return;
+  }
+
+  const statusMap = {
+    new: { label: '🟡 Новый', cls: 'status-new' },
+    progress: { label: '🔵 В работе', cls: 'status-progress' },
+    resolved: { label: '🟢 Решён', cls: 'status-resolved' },
+    rejected: { label: '🔴 Отклонён', cls: 'status-rejected' }
+  };
+
+  container.innerHTML = visible.map(t => {
+    const st = statusMap[t.status] || statusMap.new;
+    let adminControls = '';
+    if (isAdmin) {
+      adminControls = `
+        <div class="ticket-actions">
+          <button onclick="changeStatus(${t.id}, 'progress')">🔵 В работе</button>
+          <button onclick="changeStatus(${t.id}, 'resolved')">🟢 Решён</button>
+          <button onclick="changeStatus(${t.id}, 'rejected')">🔴 Отклонён</button>
+        </div>
+        <div class="admin-comment-box">
+          <input type="text" placeholder="Комментарий администратора..." id="comment-${t.id}" value="${(t.comment || '').replace(/"/g, '&quot;')}">
+          <button onclick="addComment(${t.id})">💬</button>
+        </div>
+      `;
+    }
+    const commentHTML = t.comment ? `<div class="ticket-comment"><strong>Админ:</strong> ${t.comment}</div>` : '';
+    return `
+      <div class="ticket-card">
+        <div class="ticket-header">
+          <h4>${t.subject}</h4>
+          <span class="status-badge ${st.cls}">${st.label}</span>
+        </div>
+        <div class="ticket-meta">👤 ${t.name} · ✉️ ${t.email} · 🕐 ${t.date}</div>
+        <div class="ticket-body">${t.message}</div>
+        ${commentHTML}
+        ${adminControls}
+      </div>
+    `;
+  }).join('');
+}
+
+// Изменить статус обращения (админ)
+function changeStatus(id, status) {
+  const tickets = getTickets();
+  const ticket = tickets.find(t => t.id === id);
+  if (ticket) {
+    ticket.status = status;
+    saveTickets(tickets);
+    renderTickets();
+    showToast('Статус обращения обновлён');
+  }
+}
+
+// Добавить комментарий (админ)
+function addComment(id) {
+  const input = document.getElementById('comment-' + id);
+  if (!input) return;
+  const comment = input.value.trim();
+  if (!comment) return;
+  const tickets = getTickets();
+  const ticket = tickets.find(t => t.id === id);
+  if (ticket) {
+    ticket.comment = comment;
+    saveTickets(tickets);
+    renderTickets();
+    showToast('Комментарий сохранён');
+  }
+}
+
+/* ========================================================
+   АНАЛИТИКА
+   ======================================================== */
+function renderAnalytics() {
+  const tickets = getTickets();
+  const isAdmin = sessionStorage.getItem('nav_admin') === 'true';
+
+  // Подсчёт статусов
+  const statusCounts = { new: 0, progress: 0, resolved: 0, rejected: 0 };
+  tickets.forEach(t => { if (statusCounts[t.status] !== undefined) statusCounts[t.status]++; });
+  const totalTickets = tickets.length;
+
+  // Статистические карточки
+  const statsGrid = document.getElementById('statsGrid');
+  const stats = [
+    { icon: '👥', number: 156, label: 'Участников ПО' },
+    { icon: '🎯', number: 47, label: 'Мероприятий проведено' },
+    { icon: '📩', number: totalTickets, label: 'Обращений всего' },
+    { icon: '🏆', number: 12, label: 'Проектов реализовано' }
+  ];
+
+  statsGrid.innerHTML = stats.map(s => `
+    <div class="stat-card">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-number" data-target="${s.number}">0</div>
+      <div class="stat-label">${s.label}</div>
+    </div>
+  `).join('');
+
+  // Анимация счётчиков
+  setTimeout(() => animateCounters(), 100);
+
+  // Диаграмма статусов
+  const statusChart = document.getElementById('statusChart');
+  const statusLabels = [
+    { key: 'new', label: '🟡 Новые', color: '#f5c518' },
+    { key: 'progress', label: '🔵 В работе', color: '#58a6ff' },
+    { key: 'resolved', label: '🟢 Решённые', color: '#3fb950' },
+    { key: 'rejected', label: '🔴 Отклонённые', color: '#e94560' }
+  ];
+
+  statusChart.innerHTML = '<div class="status-bars">' + statusLabels.map(s => {
+    const count = statusCounts[s.key];
+    const pct = totalTickets ? Math.round(count / totalTickets * 100) : 0;
+    return `
+      <div class="status-bar-row">
+        <div class="status-bar-label">${s.label}</div>
+        <div class="status-bar-track">
+          <div class="status-bar-fill" style="width:0%;background:${s.color};" data-width="${pct}%">${count} (${pct}%)</div>
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+
+  // Анимация полос статусов
+  setTimeout(() => {
+    document.querySelectorAll('.status-bar-fill').forEach(el => {
+      el.style.width = el.dataset.width;
+    });
+  }, 200);
+
+  // Диаграмма направлений
+  const directions = [
+    { name: 'Образование', pct: 85, cls: 'c1' },
+    { name: 'Волонтёрство', pct: 92, cls: 'c2' },
+    { name: 'Спорт', pct: 78, cls: 'c3' },
+    { name: 'Медиа', pct: 65, cls: 'c4' },
+    { name: 'Патриотизм', pct: 71, cls: 'c5' },
+    { name: 'Экология', pct: 58, cls: 'c6' }
+  ];
+
+  const dirChart = document.getElementById('directionsChart');
+  dirChart.innerHTML = directions.map(d => `
+    <div class="bar-row">
+      <div class="bar-label">${d.name}</div>
+      <div class="bar-track">
+        <div class="bar-fill ${d.cls}" style="width:0%;" data-width="${d.pct}%">
+          <span class="bar-percent">${d.pct}%</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Анимация полос направлений
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill').forEach(el => {
+      el.style.width = el.dataset.width;
+    });
+  }, 300);
+
+  // Canvas диаграмма — вовлечённость по месяцам
+  drawCanvasChart();
+
+  // Расширенная статистика для админа
+  const adminPanel = document.getElementById('adminAnalytics');
+  if (isAdmin) {
+    adminPanel.style.display = 'block';
+    const uniqueUsers = [...new Set(tickets.map(t => t.email))];
+    const avgPerUser = uniqueUsers.length ? (totalTickets / uniqueUsers.length).toFixed(1) : 0;
+
+    // Топ по обращениям
+    const userCounts = {};
+    tickets.forEach(t => { userCounts[t.name] = (userCounts[t.name] || 0) + 1; });
+    const topUsers = Object.entries(userCounts).sort((a,b) => b[1]-a[1]).slice(0, 5);
+
+    document.getElementById('adminStatsContent').innerHTML = `
+      <div class="stats-grid" style="margin-bottom:16px;">
+        <div class="stat-card">
+          <div class="stat-icon">📧</div>
+          <div class="stat-number">${uniqueUsers.length}</div>
+          <div class="stat-label">Уникальных обратившихся</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-number">${avgPerUser}</div>
+          <div class="stat-label">Среднее кол-во обращений</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-number">${statusCounts.resolved}</div>
+          <div class="stat-label">Решено обращений</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-number">${statusCounts.new + statusCounts.progress}</div>
+          <div class="stat-label">Ожидают ответа</div>
+        </div>
+      </div>
+      ${topUsers.length ? `
+        <h4 style="margin-bottom:12px;color:var(--yellow);">Топ обратившихся:</h4>
+        ${topUsers.map((u, i) => `<div style="padding:6px 0;color:var(--text2);font-size:.9rem;">${i+1}. ${u[0]} — ${u[1]} обращений</div>`).join('')}
+      ` : ''}
+    `;
+  } else {
+    adminPanel.style.display = 'none';
+  }
+}
+
+// Анимация счётчиков
+function animateCounters() {
+  document.querySelectorAll('.stat-number[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    const duration = 1500;
+    const start = performance.now();
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Easing
+      const ease = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(ease * target);
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  });
+}
+
+// Canvas диаграмма
+function drawCanvasChart() {
+  const canvas = document.getElementById('canvasChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+
+  const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+  const data = [12, 19, 24, 31, 28, 45, 52, 48, 61, 55, 67, 73];
+  const maxVal = Math.max(...data);
+  const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+  const chartW = w - padding.left - padding.right;
+  const chartH = h - padding.top - padding.bottom;
+
+  // Фон
+  ctx.fillStyle = 'transparent';
+  ctx.fillRect(0, 0, w, h);
+
+  // Сетка
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = padding.top + (chartH / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(w - padding.right, y);
+    ctx.stroke();
+
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxVal - (maxVal / 4) * i), padding.left - 8, y + 4);
+  }
+
+  // Столбцы
+  const barW = chartW / months.length * 0.6;
+  const gap = chartW / months.length;
+
+  data.forEach((val, i) => {
+    const x = padding.left + gap * i + (gap - barW) / 2;
+    const barH = (val / maxVal) * chartH;
+    const y = padding.top + chartH - barH;
+
+    // Градиент столбца
+    const grad = ctx.createLinearGradient(x, y, x, y + barH);
+    grad.addColorStop(0, '#e94560');
+    grad.addColorStop(1, '#0f3460');
+    ctx.fillStyle = grad;
+
+    // Скруглённые углы сверху
+    const r = 4;
+    ctx.beginPath();
+    ctx.moveTo(x, y + barH);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.lineTo(x + barW - r, y);
+    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+    ctx.lineTo(x + barW, y + barH);
+    ctx.closePath();
+    ctx.fill();
+
+    // Значение над столбцом
+    ctx.fillStyle = '#e6edf3';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(val, x + barW / 2, y - 6);
+
+    // Подпись месяца
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(months[i], x + barW / 2, h - padding.bottom + 20);
+  });
+}
+
+/* ========================================================
+   АВТОРИЗАЦИЯ
+   ======================================================== */
+function openLogin() {
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').classList.remove('show');
+  document.getElementById('loginModal').classList.add('show');
+}
+
+function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+
+  if (user === 'admin' && pass === 'first2024') {
+    sessionStorage.setItem('nav_admin', 'true');
+    closeModal('loginModal');
+    updateNavAuth();
+    showToast('Добро пожаловать, Администратор! 👋');
+  } else {
+    // Анимация тряски
+    const box = document.getElementById('loginBox');
+    box.classList.add('shake');
+    setTimeout(() => box.classList.remove('shake'), 500);
+    document.getElementById('loginError').classList.add('show');
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('nav_admin');
+  updateNavAuth();
+  showToast('Вы вышли из системы');
+  // Перерендерить обращения если на странице коммуникации
+  renderTickets();
+}
+
+function updateNavAuth() {
+  const isAdmin = sessionStorage.getItem('nav_admin') === 'true';
+  const navRight = document.getElementById('navRight');
+  if (isAdmin) {
+    navRight.innerHTML = `
+      <div class="admin-badge">👤 Админ</div>
+      <button class="btn-logout" onclick="doLogout()">Выход</button>
+    `;
+  } else {
+    navRight.innerHTML = `<button class="btn-login" onclick="openLogin()">🔐 Вход</button>`;
+  }
+}
+
+// Вход по Enter
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('loginModal').classList.contains('show')) {
+    doLogin();
+  }
+});
+
+/* ========================================================
+   УВЕДОМЛЕНИЯ (TOAST)
+   ======================================================== */
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+/* ========================================================
+   ИНИЦИАЛИЗАЦИЯ
+   ======================================================== */
+document.addEventListener('DOMContentLoaded', function() {
+  renderFAQ();
+  renderDocs();
+  renderTickets();
+  updateNavAuth();
+
+  // Заполнить имя и email если сохранены
+  const savedName = localStorage.getItem('nav_user_name');
+  const savedEmail = localStorage.getItem('nav_user_email');
+  if (savedName) document.getElementById('commName').value = savedName;
+  if (savedEmail) document.getElementById('commEmail').value = savedEmail;
+});
+
+// Перерисовка canvas при изменении размера
+window.addEventListener('resize', function() {
+  if (document.getElementById('sec-analytics').classList.contains('active')) {
+    drawCanvasChart();
+  }
+});
+</script>
+</body>
+</html>
